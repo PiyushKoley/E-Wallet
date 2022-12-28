@@ -9,15 +9,17 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="users")
+@Table(name="user")
 public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(unique = true)
     private String userName;
 
+    private int age;
     private String name;
 
     private String email;

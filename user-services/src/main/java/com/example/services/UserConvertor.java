@@ -9,6 +9,7 @@ public class UserConvertor {
         UserEntity userEntity = UserEntity.builder()
                                     .userName(userRequestDto.getUserName())
                                     .email(userRequestDto.getEmail())
+                                    .age(userRequestDto.getAge())
                                     .mobileNo(userRequestDto.getMobileNo())
                                     .name(userRequestDto.getName())
                                     .build();

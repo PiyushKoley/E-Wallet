@@ -9,9 +9,20 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    void addUser(UserRequestDto userRequestDto) {
+    void createUser(UserRequestDto userRequestDto) {
 
         UserEntity userEntity = UserConvertor.convertDtoToEntity(userRequestDto);
         userRepository.save(userEntity);
+    }
+
+    UserEntity getUserByUserName(String userName) throws Exception{
+
+
+        UserEntity userEntity = userRepository.findByUserName(userName);
+
+        if(userEntity == null) {
+            throw new Exception("user not found in dataBase");
+        }
+        return userEntity;
     }
 }
