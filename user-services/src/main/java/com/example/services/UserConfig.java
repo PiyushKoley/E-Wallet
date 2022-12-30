@@ -2,7 +2,6 @@ package com.example.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.requests.ProduceRequest;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +18,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import java.util.Properties;
 
 @Configuration
-public class Config {
+public class UserConfig {
 
     @Bean
     LettuceConnectionFactory getConnectionFactory() {
@@ -55,6 +54,7 @@ public class Config {
 
 
     //****************** FOR KAFKA TEMPLATE ****************
+    // UserEntity is only work as a producer only and not as consumer....
 
     @Bean
     Properties kafkaProperties() {
@@ -73,7 +73,7 @@ public class Config {
     }
 
     @Bean
-    KafkaTemplate<String,String> kafkatemplate() {
+    KafkaTemplate<String,String> kafkaTemplate() {
 
         return new KafkaTemplate<>(getProducerFactory());
     }

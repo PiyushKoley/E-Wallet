@@ -13,11 +13,11 @@ public class WalletController {
     @Autowired
     WalletService walletService;
 
-    @PostMapping("/create-wallet")
-    public void createWallet(@RequestParam("/userName") String userName) {
-
-        walletService.createWallet(userName);
-    }
+//    @PostMapping("/create-wallet")
+//    public void createWallet(@RequestParam("/userName") String userName) {
+//
+//        walletService.createWallet(userName);
+//    }
 
 
 }

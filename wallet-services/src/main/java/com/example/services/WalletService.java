@@ -1,6 +1,11 @@
 package com.example.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -9,45 +14,80 @@ public class WalletService {
     @Autowired
     WalletRepository walletRepository;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    KafkaTemplate<String,String> kafkaTemplate;
+
+
     //****************  CREATEWALLET WILL BE CALLED THROUGH KAFKA **********
-    void createWallet(String userName) {
+    // *********** when ever any user is created then the wallet gets created automatically *************
+    @KafkaListener(topics = "create_wallet", groupId = "friends_group")
+    void createWallet(String message) throws JsonProcessingException {
+
+        JSONObject walletRequest = objectMapper.readValue(message,JSONObject.class);
+
+        String username = (String) walletRequest.get("userName");
 
         WalletEntity walletEntity = WalletEntity.builder()
+                                    .userName(username)
                                     .amount(0)
-                                    .userName(userName)
                                     .build();
 
         walletRepository.save(walletEntity);
     }
 
-    WalletEntity incrementWallet(String userName, int amount) {
 
-        WalletEntity oldWallet = walletRepository.findByUserName(userName);
+    @KafkaListener(topics = "update_wallet", groupId = "friends_group")
+    void updateWallet(String message) throws JsonProcessingException {
+        JSONObject walletRequest = objectMapper.readValue(message,JSONObject.class);
 
-        int newAmount = oldWallet.getAmount() + amount;
+        String fromUser = (String) walletRequest.get("fromUser");
+        String toUser =(String) walletRequest.get("toUser");
+        int transactionAmount = (int) walletRequest.get("amount");
+        String transactionId = (String) walletRequest.get("transactionId");
 
-        oldWallet.setAmount(newAmount);
 
-        WalletEntity newWallet = walletRepository.save(oldWallet); // ***** we are saving it again so it will update the changed fields only****
+        // TODO STEPS :
+        /*
+            1st check sender balance .
+                -> if balanceOfSender < transactionAmount => send status as failed.
 
+            2nd
 
-        // Method 2nd by custom SQL query...****** check walletRepository *******
-        // long rowsAffected = walletRepository.updateWallet(userName, amount);
+        * */
 
-        return newWallet;
+        WalletEntity senderWallet = walletRepository.findByUserName(fromUser);
+        WalletEntity receiverWallet = walletRepository.findByUserName(toUser);
+
+        JSONObject transactionRequest = new JSONObject();
+        transactionRequest.put("transactionId",transactionId);
+
+        if(senderWallet.getAmount() < transactionAmount) { //****** insufficient fund in senders wallet *****
+            transactionRequest.put("transactionStatus","FAILED");
+        }
+        else{ //****** if balance is sufficient then make transaction update wallet also...******
+            transactionRequest.put("transactionStatus","SUCCESS");
+
+            updateWallet(senderWallet,(-1*transactionAmount));
+            updateWallet(receiverWallet,transactionAmount);
+
+        }
+
+        String sendMessage = transactionRequest.toJSONString();
+
+        kafkaTemplate.send("update_transaction",sendMessage);
     }
 
-    WalletEntity decrementWallet(String userName, int amount) {
+    private void updateWallet(WalletEntity walletEntity, int amount) {
+        int newAmount = walletEntity.getAmount() + amount;
 
-        WalletEntity oldWallet = walletRepository.findByUserName(userName);
+        walletEntity.setAmount(newAmount);
 
-        int newAmount = oldWallet.getAmount() - amount;
-
-        oldWallet.setAmount(newAmount);
-
-        WalletEntity newWallet = walletRepository.save(oldWallet);
-
-        return newWallet;
+        walletRepository.save(walletEntity);
     }
+
+
 
 }

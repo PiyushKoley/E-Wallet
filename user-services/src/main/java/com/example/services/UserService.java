@@ -3,7 +3,6 @@ package com.example.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class UserService {
 
         UserEntity userEntity = UserConvertor.convertDtoToEntity(userRequestDto);
 
-        userRepository.save(userEntity);
+        userEntity = userRepository.save(userEntity);
         //first save it to mysql then save it to redis ... if it fails to save to sql then it will not get saved to redis..
 
         //save it to redis cache...
@@ -43,19 +42,24 @@ public class UserService {
         // when ever we create a user we will send request to wallet to create a wallet also, through kafka...
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("userName",userEntity.getUserName());
+        jsonObject.put("name",userEntity.getName());
+
 
         /*
-        ******** THIS WILL BE THE jsonObject *********
+            ******** THIS WILL BE THE jsonObject same as WalletRequestDto just like we use to send through POSTMAN *********
             {
-                "userName" : "here we will have userName of the user"
+                "userName" : "here we will have userName of the user",
+                "name" : "name of the user"
             }
-        * */
+        */
+
         String message = jsonObject.toJSONString(); //this is string now but it carries whole object in it ....
 
         //**************** here in kafkaTemplate 1-> topic, 2-> partition(key), 3-> message *****************
-        kafkaTemplate.send(CREATE_WALLET_TOPIC,userEntity.getUserName(),message);
+        //********** 1->topic, 2-> message ************
+        kafkaTemplate.send(CREATE_WALLET_TOPIC,message);
 
-        // topic and partition we have to create manually through CMD only,, here we are just send message to topic ....
+        // topic and partition we have to create manually through CMD only, here we are just sending message to topic ....
     }
 
     private void saveToRedis(UserEntity userEntity) {
