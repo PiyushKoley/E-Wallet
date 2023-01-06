@@ -96,12 +96,6 @@ public class UserService {
         UserEntity userEntity = objectMapper.convertValue(map,UserEntity.class);
 
 
-
-//        UserEntity userEntity = userRepository.findByUserName(userName);
-//
-//        if(userEntity == null) {
-//            throw new Exception("user not found in dataBase");
-//        }
         return userEntity;
     }
 }

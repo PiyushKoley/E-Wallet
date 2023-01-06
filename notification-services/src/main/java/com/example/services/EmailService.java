@@ -33,7 +33,7 @@ public class EmailService {
 
         simpleMailMessage.setTo(email);
         simpleMailMessage.setText(sendMessage);
-
+        simpleMailMessage.setFrom("piyushkoley.pk@gmail.com");
         simpleMailMessage.setSubject("Transaction Message");
 
         javaMailSender.send(simpleMailMessage);
