@@ -20,5 +20,5 @@ public class WalletEntity {
 
     private String userName;
 
-    private int amount;
+    private int balance;
 }

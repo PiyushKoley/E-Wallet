@@ -32,7 +32,7 @@ public class WalletService {
 
         WalletEntity walletEntity = WalletEntity.builder()
                                     .userName(username)
-                                    .amount(0)
+                                    .balance(0)
                                     .build();
 
         walletRepository.save(walletEntity);
@@ -64,10 +64,13 @@ public class WalletService {
         JSONObject transactionRequest = new JSONObject();
         transactionRequest.put("transactionId",transactionId);
 
-        if(senderWallet.getAmount() < transactionAmount) { //****** insufficient fund in senders wallet *****
+        if(transactionAmount < 0 ) {
+            transactionRequest.put("transactionStatus","REJECTED");
+        }
+        else if(senderWallet.getBalance() < transactionAmount){ //****** insufficient fund in senders wallet *****
             transactionRequest.put("transactionStatus","FAILED");
         }
-        else{ //****** if balance is sufficient then make transaction update wallet also...******
+        else{ //****** if balance is sufficient then make transaction and update wallets also...******
             transactionRequest.put("transactionStatus","SUCCESS");
 
             updateWallet(senderWallet,(-1*transactionAmount));
@@ -81,9 +84,9 @@ public class WalletService {
     }
 
     private void updateWallet(WalletEntity walletEntity, int amount) {
-        int newAmount = walletEntity.getAmount() + amount;
+        int newAmount = walletEntity.getBalance() + amount;
 
-        walletEntity.setAmount(newAmount);
+        walletEntity.setBalance(newAmount);
 
         walletRepository.save(walletEntity);
     }
